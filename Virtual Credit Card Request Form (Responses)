@@ -1,0 +1,95 @@
+/*************************************************************************************************************
+* On form submit, send form submissions to creditcard@broadinstitute.org via email
+*
+* @param {} No input parameters
+* @return {} No return code
+*/
+//
+// Name: onFormSubmit(e)
+// Author: Bruce Kozuma
+// Credits: Based on code from here: https://www.madebymany.com/stories/supercharge-your-google-form-with-google-apps-script
+//          and https://developers.google.com/apps-script/reference/forms/
+//
+// Purpose: On form submit, send form submissions to creditcard@broadinstitute.org via email
+//
+// To be implemented
+//
+//
+// Version: 0.1
+// Date: 2018/10/29
+// Initial release
+//
+function onFormSubmit(e) {
+
+  Logger.log("[METHOD] onFormSubmit");
+
+/*
+  Virtual Credit Card Request Form (Responses) layout
+  Column | Column title
+  ---------------------------------------------
+   1 (A) | Timestamp
+   2 (B) | Full Name
+   3 (C) | Email
+   4 (D) | Cost Object
+   5 (E) | Vendor
+   6 (F) | Business Purpose
+   7 (G) | Amount of Expense
+   8 (H) | Is this expense related to travel?
+   9 (I) | Travel Destination (if applicable)
+  10 (J) | Traveler Name (if applicable)
+  11 (K) | Travel Dates (if applicable)
+  12 (L) | Additional comments
+  13 (M) | Email Address (collected by form)
+*/
+
+  // Get the spreadsheet
+  var values = e.range.getValues();
+
+
+  // Get the values from the range
+  var row = values[0];
+
+
+  // Get the values from the row
+  var timestamp = row[0];
+  var fullName = row[1];
+  var email = row[2];
+  var costObject = row[3];
+  var vendor = row[4];
+  var businessPurpose = row[5];
+  var amountOfExpense = row[6];
+  var isThisExpenseRelatedToTravel = row[7];
+  var travelDestination = row[8];
+  var travelerName = row[9];
+  var travelDates = row[10];
+  var additionalComments = row[11];
+
+
+  var emailRecipients = "creditcard@broadinstitute.org"
+  var emailSubject = "Virtual Credit Card request for " + fullName;
+  var emailBody = "<p>" + emailSubject + "</p>" +
+    "<ul>" +
+      "<li>Timestamp: " + timestamp + "</li>" +
+      "<li>Full Name: " + fullName + "</li>" +
+      "<li>Email: " + email + "</li>" +
+      "<li>Cost Object: " + costObject + "</li>" +
+      "<li>Vendor: " + vendor + "</li>" +
+      "<li>Business Purpose: " + businessPurpose + "</li>" +
+      "<li>Amount of Expense: " + amountOfExpense + "</li>" +
+      "<li>Is this expense related to travel: " + isThisExpenseRelatedToTravel + "</li>" +
+      "<li>Travel Destination: " + travelDestination + "</li>" +
+      "<li>Traveler Name: " + travelerName + "</li>" +
+      "<li>Travel Dates: " + travelDates + "</li>" +
+      "<li>Additional Comments: " + additionalComments + "</li>" + 
+    "</ul>";
+
+
+  // Send email
+  MailApp.sendEmail( {
+    to: emailRecipients,
+    subject: emailSubject,
+    htmlBody: emailBody
+
+  } );
+
+} // function onFormSubmit(e)
