@@ -14,13 +14,18 @@
 //
 // To be implemented
 //
+// Version: 0.2
+// Date: 2018/10/29
+// - Changed to no-reply
+// - Set sender as creditcard@broadinstitute.org
+//
 //
 // Version: 0.1
 // Date: 2018/10/29
 // Initial release
 //
 function onFormSubmit(e) {
-
+  
   Logger.log("[METHOD] onFormSubmit");
 
 /*
@@ -86,6 +91,8 @@ function onFormSubmit(e) {
 
   // Send email
   MailApp.sendEmail( {
+    name: emailRecipients,
+    noReply: true,
     to: emailRecipients,
     subject: emailSubject,
     htmlBody: emailBody
