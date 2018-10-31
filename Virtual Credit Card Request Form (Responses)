@@ -14,6 +14,12 @@
 //
 // To be implemented
 //
+// Version: 0.3
+// Date: 2018/10/30
+// - Changed to not use no-reply as that didn't create RT tickets
+// - Set sender name as creditcard@broadinstitute.org
+//
+//
 // Version: 0.2
 // Date: 2018/10/29
 // - Changed to no-reply
@@ -25,7 +31,7 @@
 // Initial release
 //
 function onFormSubmit(e) {
-  
+
   Logger.log("[METHOD] onFormSubmit");
 
 /*
@@ -85,14 +91,19 @@ function onFormSubmit(e) {
       "<li>Travel Destination: " + travelDestination + "</li>" +
       "<li>Traveler Name: " + travelerName + "</li>" +
       "<li>Travel Dates: " + travelDates + "</li>" +
-      "<li>Additional Comments: " + additionalComments + "</li>" + 
+      "<li>Additional Comments: " + additionalComments + "</li>" +
     "</ul>";
 
 
   // Send email
+  // Note: It appears that the email of the owner of the script is used as the sender's email
+  Logger.log("To: " + emailRecipients);
+  Logger.log("Subject: " + emailSubject);
+  Logger.log("Body: " + emailBody);
   MailApp.sendEmail( {
     name: emailRecipients,
-    noReply: true,
+//    noReply: true,
+    replyTo: email,
     to: emailRecipients,
     subject: emailSubject,
     htmlBody: emailBody
