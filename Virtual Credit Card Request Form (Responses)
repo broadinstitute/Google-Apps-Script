@@ -14,6 +14,16 @@
 //
 // To be implemented
 //
+// Version: 0.5
+// Date: 2018/11/20
+// - Fixed syntax for getting values from the passed range
+//
+//
+// Version: 0.4
+// Date: 2018/11/05
+// - Rememdy from version 0.3 didn't work, changed to use GMailApp
+//
+//
 // Version: 0.3
 // Date: 2018/10/30
 // - Changed to not use no-reply as that didn't create RT tickets
@@ -32,48 +42,43 @@
 //
 function onFormSubmit(e) {
 
-  Logger.log("[METHOD] onFormSubmit");
+  var date = new Date();
+  Logger.log("[METHOD] onFormSubmit: " + date);
 
 /*
   Virtual Credit Card Request Form (Responses) layout
   Column | Column title
   ---------------------------------------------
    1 (A) | Timestamp
-   2 (B) | Full Name
-   3 (C) | Email
-   4 (D) | Cost Object
-   5 (E) | Vendor
-   6 (F) | Business Purpose
-   7 (G) | Amount of Expense
-   8 (H) | Is this expense related to travel?
-   9 (I) | Travel Destination (if applicable)
-  10 (J) | Traveler Name (if applicable)
-  11 (K) | Travel Dates (if applicable)
-  12 (L) | Additional comments
-  13 (M) | Email Address (collected by form)
+   2 (B) | Email
+   3 (C) | Email Address (collected by form)
+   2 (D) | Full Name
+   4 (E) | Cost Object
+   5 (F) | Vendor
+   6 (G) | Business Purpose
+   7 (H) | Amount of Expense
+   8 (I) | Is this expense related to software license?
+   9 (J) | Is this expense related to travel?
+  10 (K) | Travel Destination (if applicable)
+  12 (L) | Traveler Name (if applicable)
+  13 (M) | Travel Dates (if applicable)
+  14 (N) | Additional comments
 */
 
-  // Get the spreadsheet
-  var values = e.range.getValues();
-
-
-  // Get the values from the range
-  var row = values[0];
-
-
   // Get the values from the row
-  var timestamp = row[0];
-  var fullName = row[1];
-  var email = row[2];
-  var costObject = row[3];
-  var vendor = row[4];
-  var businessPurpose = row[5];
-  var amountOfExpense = row[6];
-  var isThisExpenseRelatedToTravel = row[7];
-  var travelDestination = row[8];
-  var travelerName = row[9];
-  var travelDates = row[10];
-  var additionalComments = row[11];
+  var timestamp = e.values[0];
+  var email = e.values[1];
+  var fullName = e.values[3];
+  var costObject = e.values[4];
+  var vendor = e.values[5];
+  var businessPurpose = e.values[6];
+  var amountOfExpense = e.values[7];
+  var isThisExpenseRelatedToSoftwareLicense = e.values[8];
+  var isThisExpenseRelatedToTravel = e.values[9];
+  var travelDestination = e.values[10];
+  var travelerName = e.values[11];
+  var travelDates = e.values[12];
+  var additionalComments = e.values[13];
 
 
   var emailRecipients = "creditcard@broadinstitute.org"
@@ -87,6 +92,7 @@ function onFormSubmit(e) {
       "<li>Vendor: " + vendor + "</li>" +
       "<li>Business Purpose: " + businessPurpose + "</li>" +
       "<li>Amount of Expense: " + amountOfExpense + "</li>" +
+      "<li>Is this expense related to software license: " + isThisExpenseRelatedToSoftwareLicense + "</li>" +
       "<li>Is this expense related to travel: " + isThisExpenseRelatedToTravel + "</li>" +
       "<li>Travel Destination: " + travelDestination + "</li>" +
       "<li>Traveler Name: " + travelerName + "</li>" +
@@ -100,14 +106,6 @@ function onFormSubmit(e) {
   Logger.log("To: " + emailRecipients);
   Logger.log("Subject: " + emailSubject);
   Logger.log("Body: " + emailBody);
-  MailApp.sendEmail( {
-    name: emailRecipients,
-//    noReply: true,
-    replyTo: email,
-    to: emailRecipients,
-    subject: emailSubject,
-    htmlBody: emailBody
-
-  } );
+  GmailApp.sendEmail( emailRecipients, emailSubject, emailBody, {htmlBody: emailBody} );
 
 } // function onFormSubmit(e)
