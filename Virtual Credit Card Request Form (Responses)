@@ -1,5 +1,5 @@
 /*************************************************************************************************************
-* On form submit, send form submissions to creditcard@broadinstitute.org via email
+* On form submit, send form submissions to creditcard1@broadinstitute.org via email
 *
 * @param {} No input parameters
 * @return {} No return code
@@ -10,9 +10,16 @@
 // Credits: Based on code from here: https://www.madebymany.com/stories/supercharge-your-google-form-with-google-apps-script
 //          and https://developers.google.com/apps-script/reference/forms/
 //
-// Purpose: On form submit, send form submissions to creditcard@broadinstitute.org via email
+// Purpose: On form submit, send form submissions to creditcard1@broadinstitute.org via email
 //
 // To be implemented
+//
+// Version: 0.6
+// Date: 2019/02/14
+// - Changed destination email address to creditcard1@broadinstitute.org
+// - See also CHG0033885 (https://broad.service-now.com/nav_to.do?uri=change_request.do?sys_id=ab7c40391b9f2740d80d0d01cd4bcbd0%26sysparm_view=approval)
+// - See also INC0164124 (https://broad.service-now.com/nav_to.do?uri=incident.do?sys_id=acf8873fdb32a7c0f21f89ae3b9619c1)
+//
 //
 // Version: 0.5
 // Date: 2018/11/20
@@ -81,7 +88,7 @@ function onFormSubmit(e) {
   var additionalComments = e.values[13];
 
 
-  var emailRecipients = "creditcard@broadinstitute.org"
+  var emailRecipients = "creditcard1@broadinstitute.org"
   var emailSubject = "Virtual Credit Card request for " + fullName;
   var emailBody = "<p>" + emailSubject + "</p>" +
     "<ul>" +
