@@ -14,6 +14,11 @@
 //
 // To be implemented
 //
+// Version: 0.7
+// Date: 2019/02/15
+// - Accounted for removal of question: Is this expense related to software license? (if yes please contact BITS for approval)
+//
+//
 // Version: 0.6
 // Date: 2019/02/14
 // - Changed destination email address to creditcard1@broadinstitute.org
@@ -64,15 +69,14 @@ function onFormSubmit(e) {
    5 (F) | Vendor
    6 (G) | Business Purpose
    7 (H) | Amount of Expense
-   8 (I) | Is this expense related to software license?
-   9 (J) | Is this expense related to travel?
-  10 (K) | Travel Destination (if applicable)
-  12 (L) | Traveler Name (if applicable)
-  13 (M) | Travel Dates (if applicable)
-  14 (N) | Additional comments
+   9 (I) | Is this expense related to travel?
+  10 (J) | Travel Destination (if applicable)
+  11 (K) | Traveler Name (if applicable)
+  12 (L) | Travel Dates (if applicable)
+  13 (M) | Additional comments
 */
 
-  // Get the values from the row
+  // Get the values from the row, remember off by one!
   var timestamp = e.values[0];
   var email = e.values[1];
   var fullName = e.values[3];
@@ -80,12 +84,11 @@ function onFormSubmit(e) {
   var vendor = e.values[5];
   var businessPurpose = e.values[6];
   var amountOfExpense = e.values[7];
-  var isThisExpenseRelatedToSoftwareLicense = e.values[8];
-  var isThisExpenseRelatedToTravel = e.values[9];
-  var travelDestination = e.values[10];
-  var travelerName = e.values[11];
-  var travelDates = e.values[12];
-  var additionalComments = e.values[13];
+  var isThisExpenseRelatedToTravel = e.values[8];
+  var travelDestination = e.values[9];
+  var travelerName = e.values[10];
+  var travelDates = e.values[11];
+  var additionalComments = e.values[12];
 
 
   var emailRecipients = "creditcard1@broadinstitute.org"
@@ -99,7 +102,6 @@ function onFormSubmit(e) {
       "<li>Vendor: " + vendor + "</li>" +
       "<li>Business Purpose: " + businessPurpose + "</li>" +
       "<li>Amount of Expense: " + amountOfExpense + "</li>" +
-      "<li>Is this expense related to software license: " + isThisExpenseRelatedToSoftwareLicense + "</li>" +
       "<li>Is this expense related to travel: " + isThisExpenseRelatedToTravel + "</li>" +
       "<li>Travel Destination: " + travelDestination + "</li>" +
       "<li>Traveler Name: " + travelerName + "</li>" +
