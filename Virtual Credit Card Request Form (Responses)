@@ -11,8 +11,17 @@
 //          and https://developers.google.com/apps-script/reference/forms/
 //
 // Purpose: On form submit, send form submissions to creditcard1@broadinstitute.org via email
+//  Virtual Credit Card Request Form (Responses) Google Sheet: https://docs.google.com/spreadsheets/d/1CMbnQigzlNkCZaPjWV9srvv4FTTnKxHzlHM-wfWiEtw/edit#gid=2096203660
+//  Virtual Credit Card Request Form Google Form: https://docs.google.com/forms/d/1BeDHnxYHlwErtadrYDl1gs4PXcy4amjssmT5x52zLSU/edit
+//  Those are the items that control what the user's see for field names.
 //
 // To be implemented
+//
+// Version: 0.8
+// Date: 2019/02/20
+// - Made title of column K (column #10), "Traveler Name", sent to RT match the field name in the Google Form "Conference Name"
+// - Added links to the Google Form and Google Sheet to which this code applies to this code
+//
 //
 // Version: 0.7
 // Date: 2019/02/15
@@ -86,7 +95,7 @@ function onFormSubmit(e) {
   var amountOfExpense = e.values[7];
   var isThisExpenseRelatedToTravel = e.values[8];
   var travelDestination = e.values[9];
-  var travelerName = e.values[10];
+  var conferenceName = e.values[10];
   var travelDates = e.values[11];
   var additionalComments = e.values[12];
 
@@ -104,7 +113,7 @@ function onFormSubmit(e) {
       "<li>Amount of Expense: " + amountOfExpense + "</li>" +
       "<li>Is this expense related to travel: " + isThisExpenseRelatedToTravel + "</li>" +
       "<li>Travel Destination: " + travelDestination + "</li>" +
-      "<li>Traveler Name: " + travelerName + "</li>" +
+      "<li>Conference Name: " + conferenceName + "</li>" +
       "<li>Travel Dates: " + travelDates + "</li>" +
       "<li>Additional Comments: " + additionalComments + "</li>" +
     "</ul>";
