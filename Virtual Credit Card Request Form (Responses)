@@ -17,6 +17,12 @@
 //
 // To be implemented
 //
+// Version: 0.9
+// Date: 2019/02/20
+// - Synchronized the order and number of fields from the Google Sheet and the integration code
+// - Set the sender name, but sender must be a valid alias for the trigger owner (see https://developers.google.com/apps-script/reference/gmail/gmail-app#sendEmail(String,String,String,Object)
+//
+//
 // Version: 0.8
 // Date: 2019/02/20
 // - Made title of column K (column #10), "Traveler Name", sent to RT match the field name in the Google Form "Conference Name"
@@ -73,16 +79,17 @@ function onFormSubmit(e) {
    1 (A) | Timestamp
    2 (B) | Email
    3 (C) | Email Address (collected by form)
-   2 (D) | Full Name
-   4 (E) | Cost Object
-   5 (F) | Vendor
-   6 (G) | Business Purpose
-   7 (H) | Amount of Expense
+   4 (D) | Full Name
+   5 (E) | Cost Object
+   6 (F) | Vendor
+   7 (G) | Business Purpose
+   8 (H) | Amount of Expense
    9 (I) | Is this expense related to travel?
-  10 (J) | Travel Destination (if applicable)
-  11 (K) | Traveler Name (if applicable)
-  12 (L) | Travel Dates (if applicable)
-  13 (M) | Additional comments
+  10 (J) | Conference Name
+  11 (K) | Name of attendees
+  12 (L) | Travel Destination
+  13 (M) | Travel Dates
+  14 (N) | Additional comments
 */
 
   // Get the values from the row, remember off by one!
@@ -94,13 +101,15 @@ function onFormSubmit(e) {
   var businessPurpose = e.values[6];
   var amountOfExpense = e.values[7];
   var isThisExpenseRelatedToTravel = e.values[8];
-  var travelDestination = e.values[9];
-  var conferenceName = e.values[10];
-  var travelDates = e.values[11];
-  var additionalComments = e.values[12];
+  var conferenceName = e.values[9];
+  var nameOfAttendees = e.values[10];
+  var travelDestination = e.values[11];
+  var travelDates = e.values[12];
+  var additionalComments = e.values[13];
 
 
-  var emailRecipients = "creditcard1@broadinstitute.org"
+  var emailSender = "creditcard@broadinstitute.org";
+  var emailRecipients = "creditcard1@broadinstitute.org"; // DIFFERENT THAN THE SENDER!
   var emailSubject = "Virtual Credit Card request for " + fullName;
   var emailBody = "<p>" + emailSubject + "</p>" +
     "<ul>" +
@@ -112,11 +121,18 @@ function onFormSubmit(e) {
       "<li>Business Purpose: " + businessPurpose + "</li>" +
       "<li>Amount of Expense: " + amountOfExpense + "</li>" +
       "<li>Is this expense related to travel: " + isThisExpenseRelatedToTravel + "</li>" +
-      "<li>Travel Destination: " + travelDestination + "</li>" +
       "<li>Conference Name: " + conferenceName + "</li>" +
+      "<li>Name of attendees: " + nameOfAttendees + "</li>" +
+      "<li>Travel Destination: " + travelDestination + "</li>" +
       "<li>Travel Dates: " + travelDates + "</li>" +
       "<li>Additional Comments: " + additionalComments + "</li>" +
     "</ul>";
+  var emailOptions = { 
+    from: emailSender,
+    htmlBody: emailBody,
+    name: emailSender,
+    replyTo: email
+  };
 
 
   // Send email
@@ -124,6 +140,6 @@ function onFormSubmit(e) {
   Logger.log("To: " + emailRecipients);
   Logger.log("Subject: " + emailSubject);
   Logger.log("Body: " + emailBody);
-  GmailApp.sendEmail( emailRecipients, emailSubject, emailBody, {htmlBody: emailBody} );
+  GmailApp.sendEmail( emailRecipients, emailSubject, emailBody, emailOptions );
 
 } // function onFormSubmit(e)
