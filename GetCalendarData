@@ -44,6 +44,11 @@ function onOpen() {
 // - Everything
 //
 //
+// Version: 0.2
+// Date: 2019/03/03
+// Notes: Forgot about the Monday of Date of engagement week (calculated) column
+//
+//
 // Version: 0.1
 // Date: 2019/03/03
 // Notes: Initial version
@@ -58,15 +63,16 @@ function getScientificConsultingMeetings() {
    4 - D - Project size (manual)
    5 - E - Reason for engagement (Title)
    6 - F - Date of engagement (Start date)
-   7 - G - Type of interaction (hardcode Meeting)
-   8 - H - List of people involved (other guests)
-   9 - I - Hours with consultee (End time - start time)
-  10 - J - Service consulted on (manual)
-  11 - K - Jira issue # (manual)
-  12 - L - 2 sentence summary (Description)
-  13 - M - Notes (link to) (link)
-  14 - N - List of Syz members present (manual)
-  15 - O - Expected follow-up date (manual)
+   7 - G - Monday of Date of engagement week (calculated)
+   8 - H - Type of interaction (hardcode Meeting)
+   9 - I - List of people involved (other guests)
+  10 - J - Hours with consultee (End time - start time)
+  11 - K - Service consulted on (manual)
+  12 - L - Jira issue # (manual)
+  13 - M - 2 sentence summary (Description)
+  14 - N - Notes (link to) (link)
+  15 - O - List of Syz members present (manual)
+  16 - P - Expected follow-up date (manual)
   */
   
   // constants
@@ -157,7 +163,7 @@ function getScientificConsultingMeetings() {
       
     } // List of people involved (other guests)
     Logger.log('Invitees: %s', emails);
-    const cListOfPeopleInvolved = 8; // H
+    const cListOfPeopleInvolved = 9; // I
     cSheet.getRange(currentRow, cListOfPeopleInvolved).setValue(emails);
 
 
@@ -187,7 +193,7 @@ function getScientificConsultingMeetings() {
     
     
     // Type of interaction (hardcode Meeting)
-    const cTypeOfInteractionCol = 7; // G
+    const cTypeOfInteractionCol = 8; // H
     const cTypeOfInteraction = "Meeting";
     cSheet.getRange(currentRow, cTypeOfInteractionCol).setValue(cTypeOfInteraction);
 
@@ -203,13 +209,13 @@ function getScientificConsultingMeetings() {
     // Logger.log('duration/0.25: %s, duration%0.25: %s', duration/0.25, duration%0.25);
 
     Logger.log('Duration: %s hours', duration);
-    const cHoursWithConsultee = 9; // I
+    const cHoursWithConsultee = 10; // J
     cSheet.getRange(currentRow, cHoursWithConsultee).setValue(duration);
 
 
     // 2 sentence summary (Description)
     Logger.log('Description: %s', matchingEvents[events[eventCounter]].getDescription());
-    const c2SentenceSummary = 12; // L
+    const c2SentenceSummary = 13; // M
     cSheet.getRange(currentRow, c2SentenceSummary).setValue(matchingEvents[events[eventCounter]].getDescription());
 
 
