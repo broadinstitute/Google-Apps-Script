@@ -1,0 +1,225 @@
+/**
+* Adds a menu to the Retrieve Data from Google Calendar Google Sheet
+*
+* @param {} No input parameters
+* @return {} No return code
+*/
+//
+// Name: onOpen
+// Author: Bruce Kozuma
+//
+// Purpose: Add the Scientific Consulting menu and Retrieve Data from Google Calendar item to it
+//
+//
+// Version: 0.1
+// Date: 2019/03/04
+// Notes: Initial release
+//
+//
+function onOpen() {
+
+  // Create custom menus
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('Scientific Consulting')
+      .addItem('Retrieve Data from Google Calendar', 'getScientificConsultingMeetings')
+      .addToUi();
+
+} // onOpen
+
+
+/**
+* This script gets scientific consulting meetings from the active user's Google Calendar and puts them into the attached Google Sheet
+*
+* @param {} No input parameters
+* @return {} No return code
+*/
+//
+// Name: getScientificConsultingMeetings
+// Author: Bruce Kozuma
+//
+// Purpose: This script gets scientific consulting meetings from the active user's Google Calendar that are tagged with #outreach an
+// puts them into the attached Google Sheet
+//
+// To be implemented
+// - Everything
+//
+//
+// Version: 0.1
+// Date: 2019/03/03
+// Notes: Initial version
+//
+//
+function getScientificConsultingMeetings() {
+  
+  /* Fields in the Scientific Consulting Intake Form: https://docs.google.com/spreadsheets/d/1poIrS-ZxdUq4MKEefNLUGLRCt1sR74U5ifvD90RJDIg/edit#gid=0
+   1- A - Contact (first guest)
+   2 - B - Group name (lab, subgroup) (from PeopleDB)
+   3 - C - Subgroup (manual)
+   4 - D - Project size (manual)
+   5 - E - Reason for engagement (Title)
+   6 - F - Date of engagement (Start date)
+   7 - G - Type of interaction (hardcode Meeting)
+   8 - H - List of people involved (other guests)
+   9 - I - Hours with consultee (End time - start time)
+  10 - J - Service consulted on (manual)
+  11 - K - Jira issue # (manual)
+  12 - L - 2 sentence summary (Description)
+  13 - M - Notes (link to) (link)
+  14 - N - List of Syz members present (manual)
+  15 - O - Expected follow-up date (manual)
+  */
+  
+  // constants
+  const cConsultingTag = '#ScientificConsulting';
+  const cFirstDataRow = 7;
+  var currentRow = cFirstDataRow;
+  var defaultCalendar = CalendarApp.getDefaultCalendar();
+  
+  
+  // Ensure user wants to continue
+/*
+  var ui = SpreadsheetApp.getUi();
+  var response = ui.alert('Confirm',
+                          'Get scientific consulting meetings from Google Calendar %s and put them into this Google Sheet?',
+                          defaultCalendar.getName(),
+                          ui.ButtonSet.OK_CANCEL);
+
+
+  // Exit if response is anything other than OK
+  if (response != ui.Button.OK) {
+    return;
+
+  } // Exit if response is anything other than OK
+*/
+ 
+  // Get start and stop dates
+  const cSs = SpreadsheetApp.getActiveSpreadsheet();
+  const cSheet = cSs.getSheets()[0];
+  const startDateRow = 1;
+  const startDateCol = 2;
+  const endDateRow = 2;
+  const endDateCol = 2;
+  var startDateString = String(cSheet.getRange(startDateRow, startDateCol).getValue());
+  var endDateString = String(cSheet.getRange(endDateRow, endDateCol).getValue());
+  var startDate = new Date(startDateString);
+  Logger.log('Start date: %s', startDateString);
+  var endDate = new Date(endDateString);
+  Logger.log('End date: %s', endDateString);
+
+
+
+  // Find matching event
+  var matchingEvents = CalendarApp.getDefaultCalendar().getEvents(startDate, 
+                                                                  endDate, 
+                                                                  {search: cConsultingTag});
+
+  var numMatchingEvents = matchingEvents.length;
+  Logger.log('Number of events: %s', (matchingEvents.length).toString());
+  if (numMatchingEvents < 1) {
+  var response = ui.alert('No events found with @%s',
+                          cConsultingTag,
+                          ui.ButtonSet.OK_CANCEL);
+    
+    return;
+    
+  } // Find matching event
+
+
+  // Export data from each event
+  var events = [];
+  for (var event in matchingEvents) {      
+     if (matchingEvents.hasOwnProperty(event)) events.push(event);
+
+  }
+
+  for (var eventCounter = 0; eventCounter < events.length; ++eventCounter) { 
+
+    // List of people involved (other guests)
+    // Have to do this first so that the first guest is the Contact
+    var guests = matchingEvents[events[eventCounter]].getGuestList(true);
+    Logger.log('Guests: %s', guests.length);
+    var emails = "";
+    for (var guestsCounter = 0; guestsCounter < guests.length; ++guestsCounter) { 
+      var guestEmail = guests[guestsCounter].getEmail();
+      var status = String(guests[guestsCounter].getGuestStatus());
+
+      
+      //Include attendee if not a conference room and if they didn't respond NO to the meeting
+      const cNotFound = -1;
+      const cResource = "broadinstitute.org_";
+      const cDeclinedMeeting = "NO";
+      if ((cResource != guestEmail.substring(0, cResource.length)) &&
+        (cDeclinedMeeting != status.toUpperCase())) {
+        emails += guestEmail + ", ";
+        Logger.log(guestEmail + guests[guestsCounter].getGuestStatus());
+
+      }
+      
+    } // List of people involved (other guests)
+    Logger.log('Invitees: %s', emails);
+    const cListOfPeopleInvolved = 8; // H
+    cSheet.getRange(currentRow, cListOfPeopleInvolved).setValue(emails);
+
+
+    // Contact (first guest)
+    const cContactCol = 1; // A
+    cSheet.getRange(currentRow, cContactCol).setValue(emails.substring(0,emails.indexOf(', ')));
+
+
+    // Reason for engagement (Title)
+    Logger.log(matchingEvents[events[eventCounter]].getTitle());
+    const cTitleCol = 5; // E
+    cSheet.getRange(currentRow, cTitleCol).setValue(matchingEvents[events[eventCounter]].getTitle());
+
+
+    // Date of engagement (Start date)
+    var startTime = new Date(matchingEvents[events[eventCounter]].getStartTime());
+    var startTimeString = new Date(startTime);
+    Logger.log('Start date: %s', startTimeString);
+/*
+    var startDate = (startTimeString.getFullYear()).toString() + '/' +
+      (startTimeString.getMonth()).toString() + '/' +
+        (startTimeString.getDay()).toString();
+    Logger.log('Start year: %s', startDate);
+*/
+    const cDateOfEngagementCol = 6; // F
+    cSheet.getRange(currentRow, cDateOfEngagementCol).setValue(startTimeString);
+    
+    
+    // Type of interaction (hardcode Meeting)
+    const cTypeOfInteractionCol = 7; // G
+    const cTypeOfInteraction = "Meeting";
+    cSheet.getRange(currentRow, cTypeOfInteractionCol).setValue(cTypeOfInteraction);
+
+
+    // Hours with consultee (End time - start time)
+    // Recall that dates are calculated as milliseconds
+    // 
+    var endTime = new Date(matchingEvents[events[eventCounter]].getEndTime());
+    var duration = (endTime - startTime)/(60*60*1000);
+
+    // Minimum quanta is 0.25 hours
+    // Code doesn't work
+    // Logger.log('duration/0.25: %s, duration%0.25: %s', duration/0.25, duration%0.25);
+
+    Logger.log('Duration: %s hours', duration);
+    const cHoursWithConsultee = 9; // I
+    cSheet.getRange(currentRow, cHoursWithConsultee).setValue(duration);
+
+
+    // 2 sentence summary (Description)
+    Logger.log('Description: %s', matchingEvents[events[eventCounter]].getDescription());
+    const c2SentenceSummary = 12; // L
+    cSheet.getRange(currentRow, c2SentenceSummary).setValue(matchingEvents[events[eventCounter]].getDescription());
+
+
+    // Prepare for next event
+    Logger.log('Next row: %s', currentRow);
+    ++currentRow;
+    
+  } // Export data from each event
+
+
+  // Summary stats
+  
+} // function getScientificConsultingMeetings()
