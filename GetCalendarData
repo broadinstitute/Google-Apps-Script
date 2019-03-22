@@ -49,6 +49,15 @@ function onOpen() {
 // - Everything
 //
 //
+// Version: 0.4
+// Date: 2019/03/10
+// Notes: Added ", " as a delimiter for Syzygy team members email list
+// - Accounted for new email column to match the Scientific Consulting Encounter Tracker
+// - Consolidated where const defined
+// - Removed  trailing ", " for guest emails and Syzygy emails
+// - Changed Meeting to Local Meeting to match with current standard
+//
+//
 // Version: 0.3
 // Date: 2019/03/10
 // Notes: Added instructions to the sheet
@@ -70,28 +79,33 @@ function getScientificConsultingMeetings() {
   
   /* Fields in the Scientific Consulting Intake Form:
   // https://docs.google.com/spreadsheets/d/1poIrS-ZxdUq4MKEefNLUGLRCt1sR74U5ifvD90RJDIg/edit#gid=0
-   1- A - Contact (first guest)
-   2 - B - Group name (lab, subgroup) (from PeopleDB)
-   3 - C - Subgroup (manual)
-   4 - D - Project size (manual)
-   5 - E - Reason for engagement (Title)
-   6 - F - Date of engagement (Start date)
-   7 - G - Monday of Date of engagement week (calculated)
-   8 - H - Type of interaction (hardcode Meeting)
-   9 - I - List of people involved (other guests)
-  10 - J - Hours with consultee (End time - start time)
-  11 - K - Service consulted on (manual)
-  12 - L - Jira issue # (manual)
-  13 - M - 2 sentence summary (Description)
-  14 - N - Notes (link to) (link)
-  15 - O - List of Syz members present (manual)
-  16 - P - Expected follow-up date (manual)
+   1 - A - Contact (first guest) (manual)
+   2 - B - Email (Organizer)
+   3 - C - Group name (lab, subgroup) (from PeopleDB)
+   4 - D - Subgroup (manual)
+   5 - E - Project size (manual)
+   6 - F - Reason for engagement (Title)
+   7 - G - Date of engagement (Start date)
+   7 - H - Monday of Date of engagement week (calculated)
+   8 - I - Type of interaction (hardcode Meeting)
+  10 - J - List of people involved (other guests)
+  11 - K - Hours with consultee (End time - start time)
+  12 - L - Service consulted on (manual)
+  13 - M - Jira issue # (manual)
+  14 - N - 2 sentence summary (Description)
+  15 - O - Notes (link to) (link)
+  16 - P - List of Syz members present (manual)
+  17 - Q - Expected follow-up date (manual)
   */
   
   // How to find the data
   const cConsultingTag = '#ScientificConsulting';
 
 
+  // Email list separator
+  const emailSeparator = ", ";
+  
+  
   // About the team
   const cSyzygyTeam = [
     "alosada@broadinstitute.org",
@@ -115,14 +129,15 @@ function getScientificConsultingMeetings() {
   // Where to put the data
   const cFirstDataRow = 15;
   var currentRow = cFirstDataRow;
-  const cListOfPeopleInvolved = 9; // I
-  const cContactCol = 1; // A
-  const cDateOfEngagementCol = 6; // F
-  const cTypeOfInteractionCol = 8; // H
-  const cTypeOfInteraction = "Meeting";
-  const cHoursWithConsulteeCol = 10; // J
-  const c2SentenceSummaryCol = 13; // M
-  const cSyzygyAttendeesCol = 15; // O
+  const cListOfPeopleInvolved = 10; // J
+  const cContactCol = 2; // B
+  const cTitleCol = 6; // F
+  const cDateOfEngagementCol = 7; // G
+  const cTypeOfInteractionCol = 9; // I
+  const cTypeOfInteraction = "Local Meeting";
+  const cHoursWithConsulteeCol = 11; // K
+  const c2SentenceSummaryCol = 14; // N
+  const cSyzygyAttendeesCol = 16; // P
   
   
   // Get the current user's calendar
@@ -190,7 +205,7 @@ function getScientificConsultingMeetings() {
 
   for (var eventCounter = 0; eventCounter < events.length; ++eventCounter) { 
 
-    // List of people involved (other guests)
+    // Assemble list of people involved (other guests)
     // Have to do this first so that the first guest is the Contact
     var guests = matchingEvents[events[eventCounter]].getGuestList(true);
     Logger.log('Guests: %s', guests.length);
@@ -207,12 +222,12 @@ function getScientificConsultingMeetings() {
           // Check if attendee is a Syzygy team member
           if (cNotFound != cSyzygyTeam.indexOf(guestEmail)) {
             // Attendee is a Syzygy team member
-            syzygyAttendees += guestEmail;
+            syzygyAttendees += guestEmail + emailSeparator;
             Logger.log(guestEmail + guests[guestsCounter].getGuestStatus());
 
           } else {
             // Not a conference room, didn't respond No to the meeting, and not a Syzygy team member
-            emails += guestEmail + ", ";
+            emails += guestEmail + emailSeparator;
             Logger.log(guestEmail + guests[guestsCounter].getGuestStatus());
 
           } // Check if attendee is a Syzygy team member
@@ -220,6 +235,14 @@ function getScientificConsultingMeetings() {
       } // Include attendee if not a conference room and if they didn't respond NO to the meeting
       
     } // List of people involved (other guests)
+
+    
+    // Remove extra trailing ", "
+    syzygyAttendees = syzygyAttendees.substring(0, syzygyAttendees.length - emailSeparator.length);
+    emails = emails.substring(0, emails.length - emailSeparator.length);
+    
+
+    // List of people involved (other guests)
     Logger.log('Invitees: %s', emails);
     cSheet.getRange(currentRow, cListOfPeopleInvolved).setValue(emails);
 
@@ -230,7 +253,6 @@ function getScientificConsultingMeetings() {
 
     // Reason for engagement (Title)
     Logger.log(matchingEvents[events[eventCounter]].getTitle());
-    const cTitleCol = 5; // E
     cSheet.getRange(currentRow, cTitleCol).setValue(matchingEvents[events[eventCounter]].getTitle());
 
 
