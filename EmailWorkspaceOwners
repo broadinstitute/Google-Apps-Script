@@ -1,0 +1,146 @@
+/**
+Subscription | Workspace_Name | Broad email address | PI Agreed to copy
+CCLE2 | CCLE2_RNAseq_GTEX | francois@broadinstitute.org | Unspecified
+* Create draft emails per unique email address of Firehose workspaces for which they are an administrator
+*
+* @param {} No input parameters
+* @return {} No return code
+*/
+//
+// Name: createDraftWorkspaceEmails
+// Author: Bruce Kozuma
+// Credits: Only my fevered imagination
+//
+// Purpose: Create draft emails per unique emails of Firehose workspaces for which they are an administrator
+// This script is intended to be used with the Firehose email automation Google Sheet, which is derived from another Google Sheet,
+// which is derived from People data, screen scraped Firehose data, and the Firehose --> FireCloud Migration Google Sheet
+// (yes, it's that ugly)
+//
+// To be implemented
+// - Everything
+//
+// Version: 0.02
+// Date: 2018/06/08
+// Notes: Fixed bug where mail body was not being cleared out between workspace admins
+//
+//
+// Version: 0.01
+// Date: 2018/06/07
+// Notes: Initial version
+//
+//
+function createDraftWorkspaceEmails() {
+
+  // Get the current sheet
+  const cSs = SpreadsheetApp.getActiveSpreadsheet();
+  const cSheet = cSs.getSheets()[0];
+
+
+  // Get current user's email address
+  var spreadsheetUserEmail = Session.getActiveUser().getEmail();
+  Logger.log(spreadsheetUserEmail);
+
+
+  // Spreadsheet columns
+  // A = Subscription
+  // B = Workspace_Name
+  // C = Broad email address
+  // D = PI Agreed to Copy
+  const cSubscriptionCol = 1;
+  const cWorkspaceNameCol = 2;
+  const cBroadEmailAddressCol = 3;
+  const cPIAgreedToCopyCol = 4;
+
+  
+  // Constants about email addresses
+  const cBaseDraftEmailSubject = "Confirming Firehose workspace details for ";
+  const cCC = "firehosemigration@broadinstitute.org";
+  var thisDraft = "";
+  var mailOptions = "";
+  var mailBody = "<p>As you hopefully have heard by now, Firehose is scheduled to be decommissioned starting on <b><i>June 30, 2018</i></b>. " +  
+    "(In case you haven't heard that Firehose is being decommissioned, this link will provide more information: <a href=\"https://gatkforums.broadinstitute.org/firecloud/categories/firehose-migration\">Firehose Migration</a></p>" +
+    "<p>Included in this email is a list of Firehose workspaces that have your name associated with it, either as a workspace admin, or as a subscription owner.</p>" +
+    "<p>Workspaces have been categorized as follows:</p>" +
+     "<ul>" +
+       "<li><b>Migrate to FireCloud</b> - for those workspaces that you or another workspace admin for a given workspace have indicated should be migrated to FireCloud</li>" +
+       "<li><b>Can delete</b> - for those workspaces that all the workspace admins for a given workspace have indicated can be deleted when Firehose is decommissioned, all of the data and metadata associated with this workspace will be unrecoverable once deleted</li>" +
+       "<li><b>Unspecified</b> - for those workspaces for which no workspace admins have indicated what should be done with the workspace, <b><i>after Friday 06/15</i></b>, these workspaces will be marked for deletion by adding the prefix CANDELETE_ to the original workspace name, and once deleted, all of the data and metadata associated with such workspaces will be unrecoverable</li>" +
+     "</ul>" +
+     "<p><b><i>By end of day Friday 06/15</i></b>, please confirm that the categorization is correct for each workspace, and apologies in advance for any incorrectly categorized workspaces.</p>";
+
+
+  // Get the first row of data
+  const cHeaderRow = 1;
+  var currentRow = cHeaderRow + 1;
+  var currentEmailAddress = String(cSheet.getRange(currentRow, cBroadEmailAddressCol).getValue());
+  var thisEmailAddress = String(cSheet.getRange(currentRow, cBroadEmailAddressCol).getValue());
+
+
+  // Repeat until reach a blank row
+  var currentSubscription = "";
+  var currentWorkspace = "";
+  var currentPIAgreedToCopy = ""
+  var thisSubscription = String(cSheet.getRange(currentRow, cSubscriptionCol).getValue());
+  var thisMailBody = mailBody + "<p><b>" + thisSubscription + "</b></p><ul>";
+  while ("" != currentEmailAddress) {
+    // Repeat until the email is different from the starting email
+    thisEmailAddress = String(cSheet.getRange(currentRow, cBroadEmailAddressCol).getValue());
+    while (currentEmailAddress == thisEmailAddress){
+      // Get the subscription, workspace name, and PI Agreed to copy
+      currentSubscription = String(cSheet.getRange(currentRow, cSubscriptionCol).getValue());
+      currentWorkspace = String(cSheet.getRange(currentRow, cWorkspaceNameCol).getValue());
+      currentPIAgreedToCopy = String(cSheet.getRange(currentRow, cPIAgreedToCopyCol).getValue());
+
+
+      // Write the subscrption if needed
+      if (thisSubscription != currentSubscription)
+      {
+        thisMailBody += "</ul><p><b>" + currentSubscription + "</b></p><ul>";
+        thisSubscription = String(cSheet.getRange(currentRow, cSubscriptionCol).getValue());
+
+      }
+
+
+      // Add them to the body
+      thisMailBody += "<li>" + currentWorkspace + "&emsp;&emsp;" + currentPIAgreedToCopy + "</li>";
+
+
+      // Get ready for next loop
+      ++currentRow;
+      thisEmailAddress = String(cSheet.getRange(currentRow, cBroadEmailAddressCol).getValue());
+
+    } // Repeat until the email is different from the starting email
+
+
+    // Terminate the list of workspaces
+    thisMailBody += "</ul>";
+    Logger.log(thisMailBody);
+    //SpreadsheetApp.getUi().alert(thisMailBody);
+
+
+    // Add signature so they know who to blame
+    thisMailBody += "<br>--" +
+      "<br>Bruce Kozuma" +
+      "<br>Principal System Analyst, Broad Information Technology Services" +
+      "<br>The Broad Institute of MIT and Harvard" +
+      "<br>75 Ames St, Cambridge, MA 02142</p>"
+
+    
+    // Create draft email
+    mailOptions = {
+      "cc": cCC,
+      "htmlBody": thisMailBody
+    };
+    thisDraft = GmailApp.createDraft(currentEmailAddress, cBaseDraftEmailSubject + currentEmailAddress, thisMailBody, mailOptions);
+    thisDraft.send();
+
+
+    // Get ready for next loop
+    thisDraft = "";
+    currentEmailAddress = String(cSheet.getRange(currentRow, cBroadEmailAddressCol).getValue());
+    thisSubscription = String(cSheet.getRange(currentRow, cSubscriptionCol).getValue());
+    thisMailBody = mailBody + "<p><b>" + thisSubscription + "</b></p><ul>";
+
+  } // Repeat until reach a blank row
+
+}
