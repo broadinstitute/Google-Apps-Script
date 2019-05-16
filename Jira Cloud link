@@ -1,0 +1,23 @@
+  // Data for the Jira API call
+/*
+Parent	BYK-2900
+Child	BYK-2899
+*/
+  var data = {
+    "type": {
+      "name": "is a parent of"
+    },
+    
+    "inwardIssue": {
+      "key": "BYK-2900"
+    },
+
+    "outwardIssue": {
+      "key": "BYK-2899"
+    },
+
+    "comment": {
+      "body": "Linked related issue",
+    }
+
+  };
