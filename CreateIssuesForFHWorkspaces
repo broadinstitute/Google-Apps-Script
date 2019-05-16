@@ -1,0 +1,169 @@
+function myFunction() {
+
+  const cHeaders = {
+    "content-type": "application/json",
+    "Accept": "application/json",
+    "authorization": "Basic <username>:<password>"
+
+  };
+  var method = "POST";
+  const cBaseURL = "https://broadinstitute.atlassian.net/rest/api/latest/issue";
+  var vURL = cBaseURL;
+
+  
+  // Values read from the Google Sheet
+  var data = [];
+
+
+  // Data as a JSON string
+  var payload = [];
+
+
+  // Head of what is returned from Jira when checking if an issue key is valid (i.e., exists and is accessible)
+  // Refinement: Make into a function
+  var errorMessage = "";
+
+
+  // Reply from Jira, if any, as a JSON string
+  var response = [];
+
+
+  // Error code from parsing
+  var returnCode = "";
+
+
+  // To Do status
+  const cToDo = "To Do"
+  const cDefaultBillingCode = "broad-firecloud-eddie";
+
+
+  // While not a blank row
+  // Columns
+  // FireCloud Customer Billing Account: G or 7
+  // workspace: A or 1
+  // issueKey: H or 9
+  // subscription: C or 3
+  var sheet = SpreadsheetApp.getActiveSheet();
+  var currentRow = sheet.getActiveCell().getRow();
+  var billingCode = String(sheet.getRange(currentRow, 7).getValue())
+  var workspace = String(sheet.getRange(currentRow, 1).getValue());
+  var issueKey = String(sheet.getRange(currentRow, 8).getValue());
+  var subscription = String(sheet.getRange(currentRow, 3).getValue());
+  while ("" != workspace) {
+
+    // Check for empty billing code
+    while ("" == billingCode) {
+      // Make set target Issue
+      vURL += "/" + issueKey + "/transitions";
+      
+      
+      // Data for the Jira API call
+      data = {
+        "fields": {
+          "project": {
+            "key": "FD"
+            
+          },
+          
+          
+          // The following custom fields are for the various strings and are simple text fields in JIRA
+          // You can find all the custom fields by looking here: https://broadinstitute.atlassian.net/rest/api/latest/field/
+          // FireCloud Customer Billing Account: 11202
+          // workspace: 17683
+          // subscription: 17684
+          "customfield_11202": cDefaultBillingCode,
+          "customfield_17683": workspace,
+          "customfield_17684": subscription
+          
+        },
+        
+        
+        // Open the workflow in text mode to see transition IDs
+        "transition": {
+          "id": "61"
+        }
+        
+      };
+      
+      
+      // Turn all the data into a JSON string to be send to the API
+      payload = JSON.stringify(data);
+      
+      
+      // Options for the JSON string to send
+      var options = {
+        "content-type": "application/json",
+        "method": method,
+        "headers": cHeaders,
+        "payload": payload,
+        "muteHttpExceptions": false
+        
+      };
+      
+      
+      // Make the HTTP call to the JIRA API
+      try {
+        response = UrlFetchApp.fetch(vURL, options);
+        
+      } // Make the HTTP call to the JIRA API
+      
+      
+      // Catch errors    
+      catch( err ) {
+        // something went wrong trying to retrieve the issue
+        returnCode = String(err.message);
+        SpreadsheetApp.getUi().alert("There was a problem creating a Jira Issue for row " + currentRow + "\n" + returnCode);
+        
+      } // Catch errors
+      
+      
+      // Check for return code
+      returnCode = response.getResponseCode();
+      switch (returnCode) {
+        case 204: {
+          // 204: Issue transitioned and updated
+          //        Logger.log(response.getContentText());
+          
+          
+          // Parse the JSON response to use the Issue Key returned by the API in the email
+          //        dataAll = JSON.parse(response.getContentText());
+          //        Logger.log(dataAll);
+          
+          
+          break;
+          
+        } // Issue was created
+          
+        default: {
+          // Issue was not created or updated
+          // beef this up a lot
+          Logger.log(response.getContentText());
+          SpreadsheetApp.getUi().alert("There was a problem creating a Jira Issue for row " + currentRow + "\n" + returnCode);
+          break;
+          
+        } // default
+          
+      } // Check for return code
+
+      // Prepare for next row
+      currentRow++;
+      billingCode = String(sheet.getRange(currentRow, 7).getValue())
+      workspace = String(sheet.getRange(currentRow, 1).getValue());
+      issueKey = String(sheet.getRange(currentRow, 8).getValue());
+      subscription = String(sheet.getRange(currentRow, 3).getValue());
+      vURL = cBaseURL;
+      
+    } // Check for empty billing code
+
+
+    // Prepare for next row
+    currentRow++;
+    billingCode = String(sheet.getRange(currentRow, 7).getValue())
+    workspace = String(sheet.getRange(currentRow, 1).getValue());
+    issueKey = String(sheet.getRange(currentRow, 8).getValue());
+    subscription = String(sheet.getRange(currentRow, 3).getValue());
+    vURL = cBaseURL;
+
+  } // While not a blank row
+
+} // addComment
