@@ -1,0 +1,228 @@
+function IsUserInProject() {
+
+  // Refinement: check groups/roles (i.e., those with no email address)
+  // 2018/04/23 As of today at 12:50, this code roughly works, but needs to be refactored to be cleaner
+
+  
+  // Get the email of the user who has opened the Google Sheet
+  var userEmail = Session.getActiveUser().getEmail();
+  userEmail = "sadiya@broadinstitute.org";
+SpreadsheetApp.getUi().alert("userEmail: " + userEmail);
+
+
+  // Options for the JSON string to send
+  // For example, method is either POST (for new Issues or existing Issues to be updating with a new stauts) or
+  var options = {
+    "content-type": "application/json",
+    "method": "GET",
+    "headers": {
+      "content-type": "application/json",
+      "Accept": "application/json",
+//    "authorization": "Basic <username>:<API token>"
+    },
+    "muteHttpExceptions": true
+  };
+
+  
+  // Project Key
+  const projectKey = "SCRSP";
+
+  
+  // ID for Users role can be found using this URL https://broadinstitute.atlassian.net/rest/api/latest/project/SCRSP/role
+  // Fortunately, they do seem to be stable across Projects
+  const userRole = "10000"
+
+
+  // URL to return role information
+  var baseURL = "https://broadinstitute.atlassian.net/rest/api/latest/";
+  var userRoleURL = baseURL + "project/" + projectKey + "/role/" + userRole;
+
+
+  // Get the users in the Users role
+  // People must have at least Users role to create and edit issues in the SCRSP project, this must be known apriori
+  // Some error handling for this NOT being the case would be wise, if I knew how to do that
+  var response = UrlFetchApp.fetch(userRoleURL, options);
+  Logger.log(response);
+
+
+  // Loop through users until find matching user
+  var nameFromRole = ""
+  var userSearchURL = baseURL + "user?username="
+  const cGroupSearchURLPre = baseURL + "group?groupname="
+  const cGroupSearchURLPost = "&expand=users"
+  var groupSearchURL = ""
+  var user = "";
+  var roleType = "";
+  var userFound = false;
+  const cGroupRole = "atlassian-group-role-actor";
+  var dataAll = JSON.parse(response.getContentText());
+  var actors = dataAll.actors;
+  var id = [];
+SpreadsheetApp.getUi().alert("actors.length: " + actors.length);
+  for (id in actors) {
+    nameFromRole = String(actors[id].name);
+    roleType = String(actors[id].type);
+
+    // Check if actor is a group
+    if (cGroupRole == roleType) {
+SpreadsheetApp.getUi().alert("actors.id roleType: " + actors[id].name + " " + actors[id].type);
+      //https://broadinstitute.atlassian.net/rest/api/latest/group?groupname=administrators&expand=users
+      groupSearchURL = cGroupSearchURLPre + nameFromRole + cGroupSearchURLPost
+      var groupResponse = UrlFetchApp.fetch(groupSearchURL, options);
+//      Logger.log(groupResponse);
+      var groupDataAll = JSON.parse(groupResponse);
+      var groupActors = groupDataAll.users.items;
+      var groupID = [];
+      var groupNameFromRole = "";
+      // Note: Jira Groups can only have Jira Users as members, not other Jira Groups
+      for (groupID in groupActors) {
+        
+        if (userEmail == groupActors[groupID].emailAddress) { // && (true == groupActors[groupID].active)) {
+          // user found in this group and is active
+          userFound = true;
+SpreadsheetApp.getUi().alert(userEmail + " user found: " + userFound);
+          break;
+
+        }
+        
+      } // Search for user within the group
+      
+    } // Check if actor is a group
+
+    
+    // Search for username
+    // https://broadinstitute.atlassian.net/rest/api/latest/user?username=<username>"
+    var response = UrlFetchApp.fetch(userSearchURL + nameFromRole, options);
+    Logger.log(response);
+
+
+    // Refinement: check the type to determine if the member is a user or a group
+    // Compare the email address of the user to the email address of the person who opened the Google Sheet
+    // And if the user is active
+    user = JSON.parse(response.getContentText());
+    if ((userEmail == user.emailAddress) & (user.active == true)) {
+      // user found and is active
+      userFound = true;
+      break;
+
+    } else if ("" == user.emailAddress) {
+      // There is no email address for the user, so it must be a group, so is the user in the group
+      // https://broadinstitute.atlassian.net/rest/api/latest/group?groupname=administrators&expand=users
+      // type = atlassian-group-role-actor
+      // type = atlassian-user-role-actor
+    } // Compare the email address of the user to the email address of the person who opened the Google Sheet
+
+  } // Loop through users until find matching user
+
+  // report result
+  SpreadsheetApp.getUi().alert(userFound);
+
+
+
+} // function IsUserInProject
+
+function GetPermissions() {
+
+  // Get the current sheet
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheets()[0];
+
+
+  // variables for an issue
+  var projectKey = "BYK";
+
+  
+  // Assign variable to your instance Jira API URL
+  var baseURL = "";
+  baseURL = "https://broadinstitute.atlassian.net/rest/api/2/mypermissions?" + projectKey;
+
+
+  // Reply from Jira, if any, as a JSON string
+  var response = UrlFetchApp.fetch(baseURL);
+  Logger.log(response);
+
+  // Get specific objects from the returned JSON object
+  var dataAll = JSON.parse(response.getContentText());
+  var permissions = dataAll.permissions;
+  var editIssue = permissions.EDIT_ISSUE;
+  var havePermission = editIssue.havePermission;
+  SpreadsheetApp.getUi().alert(String(havePermission));
+
+} //function GetPermissions
+
+function GetProjectRole() {
+
+  // Get the current sheet
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheets()[0];
+
+
+  // variables for an issue
+  var projectKey = "BYK";
+
+  
+  // Assign variable to your instance Jira API URL
+  var baseURL = "";
+  baseURL = "https://broadinstitute.atlassian.net/rest/api/2/project/" + projectKey + "/role/10000";
+
+
+  // Header information, including authorization information.
+  // This API call is linked to an account in JIRA, and follows the Basic Authentication method ("username:password" are Base64 encoded)
+  // Note: NOT email:password!
+  var headers = [];
+  headers = {
+    "content-type": "application/json",
+    "Accept": "application/json",
+//    "authorization": "Basic <username>:<API token>"
+  };
+
+
+  // Values read from the Google Sheet
+  // Data for the Jira API call
+  var data = [];
+  
+  
+  // Data as a JSON string
+  // Turn all the data into a JSON string to be send to the API
+  var payload = [];
+  payload = JSON.stringify(data);
+  
+  
+  // Options for the JSON string to send
+  // For example, method is either POST (for new Issues or existing Issues to be updating with a new stauts) or
+  // PUT (for existing issues to be updated without a change in status)
+  // A final few options to complete the JSON string
+  var options = [];
+  options = {
+    "content-type": "application/json",
+    "method": "GET",
+    "headers": headers,
+    "payload": payload,
+    "muteHttpExceptions": true
+  };
+  
+  
+  // Parsed response, to get things like the Issue Key
+  var dataAll = [];
+
+
+  // Reply from Jira, if any, as a JSON string
+  var response = [];
+//  try {
+
+    response = UrlFetchApp.fetch(baseURL);
+//    response = UrlFetchApp.fetch(baseURL, options);
+//
+  // Reply from Jira, if any, as a JSON string
+  var response = UrlFetchApp.fetch(baseURL);
+  Logger.log(response);
+
+
+  // Get specific objects from the returned JSON object
+  var dataAll = JSON.parse(response.getContentText());
+  var permissions = dataAll.permissions;
+  var editIssue = permissions.EDIT_ISSUE;
+  var havePermission = editIssue.havePermission;
+  SpreadsheetApp.getUi().alert(String(havePermission));
+
+} //function GetProjectRole
